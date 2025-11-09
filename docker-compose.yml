@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: art-scraper-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # GPU support (optional - comment out if no GPU available)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  mcp-server:
+    image: ghcr.io/microsoft/playwright-mcp:latest
+    container_name: art-scraper-mcp
+    ports:
+      - "8931:8931"
+    environment:
+      - NODE_ENV=production
+      - MCP_PORT=8931
+      - MCP_TRANSPORT=sse
+    command: ["node", "dist/index.js"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8931/sse"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  ollama_data:
+    driver: local

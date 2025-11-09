@@ -1,0 +1,93 @@
+{
+  "school_name": "Stamps School of Art & Design",
+  "url": "https://stamps.umich.edu/",
+  "scraped_at": "2024-11-09T14:30:00Z",
+  "scrape_duration_seconds": 127,
+  "model_used": "qwen2.5:32b",
+  "data": {
+    "in_state_tuition": {
+      "value": 17786,
+      "formatted": "$17,786",
+      "confidence": 0.95,
+      "source_url": "https://stamps.umich.edu/admissions/tuition",
+      "notes": "2024-2025 academic year, undergraduate tuition and fees"
+    },
+    "out_state_tuition": {
+      "value": 57273,
+      "formatted": "$57,273",
+      "confidence": 0.95,
+      "source_url": "https://stamps.umich.edu/admissions/tuition",
+      "notes": "2024-2025 academic year, undergraduate tuition and fees"
+    },
+    "private_tuition": {
+      "value": null,
+      "formatted": "N/A",
+      "confidence": 0,
+      "source_url": "",
+      "notes": "This is a public institution, see in_state_tuition and out_state_tuition"
+    },
+    "enrollment_size": {
+      "value": 51225,
+      "formatted": "51,225",
+      "confidence": 0.70,
+      "source_url": "https://umich.edu/about",
+      "notes": "University-wide enrollment, not program-specific. Stamps School specific enrollment not found."
+    },
+    "admission_rate": {
+      "value": 0.179,
+      "formatted": "17.9%",
+      "confidence": 0.90,
+      "source_url": "https://stamps.umich.edu/admissions/statistics",
+      "notes": "University of Michigan overall admission rate for Fall 2023"
+    },
+    "yield_rate": {
+      "value": 0.475,
+      "formatted": "47.5%",
+      "confidence": 0.85,
+      "source_url": "https://stamps.umich.edu/admissions/statistics",
+      "notes": "University of Michigan overall yield rate for Fall 2023"
+    },
+    "sat_range": {
+      "value": "1350-1530",
+      "min": 1350,
+      "max": 1530,
+      "formatted": "1350-1530 (25th-75th percentile)",
+      "confidence": 0.90,
+      "source_url": "https://stamps.umich.edu/admissions/profile",
+      "notes": "SAT middle 50% range for admitted students"
+    },
+    "sat_median": {
+      "value": 1470,
+      "formatted": "1470",
+      "confidence": 0.88,
+      "source_url": "https://stamps.umich.edu/admissions/profile",
+      "notes": "Calculated as midpoint of 25th-75th percentile range"
+    },
+    "act_range": {
+      "value": "31-34",
+      "min": 31,
+      "max": 34,
+      "formatted": "31-34 (25th-75th percentile)",
+      "confidence": 0.90,
+      "source_url": "https://stamps.umich.edu/admissions/profile",
+      "notes": "ACT middle 50% range for admitted students"
+    },
+    "act_median": {
+      "value": 33,
+      "formatted": "33",
+      "confidence": 0.88,
+      "source_url": "https://stamps.umich.edu/admissions/profile",
+      "notes": "Calculated as midpoint of 25th-75th percentile range. Note: Test-optional policy in effect."
+    }
+  },
+  "agent_summary": "Successfully extracted most requested data. Found comprehensive tuition information on dedicated tuition page. Admission statistics and test scores found in admissions profile section. Note that Stamps School is part of University of Michigan, so some statistics (enrollment, admission rate, yield) reflect university-wide data rather than program-specific data. Test-optional admission policy noted on admissions page.",
+  "navigation_path": [
+    "https://stamps.umich.edu/",
+    "https://stamps.umich.edu/admissions",
+    "https://stamps.umich.edu/admissions/tuition",
+    "https://stamps.umich.edu/admissions/statistics",
+    "https://stamps.umich.edu/admissions/profile"
+  ],
+  "tool_calls_made": 12,
+  "errors": []
+}

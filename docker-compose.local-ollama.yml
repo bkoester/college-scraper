@@ -1,0 +1,22 @@
+# Docker Compose Override for Local Ollama Users
+#
+# If you have Ollama installed locally on your Mac/Linux,
+# use this file to disable the Docker Ollama container.
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.local-ollama.yml up -d
+#
+# Or rename this to docker-compose.override.yml and just run:
+#   docker-compose up -d
+
+version: '3.8'
+
+services:
+  # Disable Ollama container - using local installation
+  ollama:
+    profiles:
+      - disabled  # This prevents it from starting
+
+  # MCP server still runs normally
+  mcp-server:
+    # No changes - runs as defined in docker-compose.yml

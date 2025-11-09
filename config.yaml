@@ -1,0 +1,229 @@
+# Art School Scraper Configuration
+
+# Ollama Configuration
+ollama:
+  model: "llama3:8b"  # The Ollama model to use
+  base_url: "http://localhost:11434"
+  temperature: 0.1
+  max_tokens: 4000
+  timeout: 120
+
+# MCP Server Configuration
+mcp:
+  base_url: "http://localhost:8931/sse"  # SSE endpoint
+  timeout: 60
+  browser: "chromium"
+  headless: true
+  transport: "sse"  # Using Server-Sent Events
+
+# Input Files
+input:
+  art_schools_file: "data/art_schools_final.xlsx"
+  admission_data_file: "data/School_Admission_Data_FINAL.xlsx"
+
+# Output Configuration
+output:
+  directory: "results"
+  format: "both"  # json, excel, or both
+  save_individual_files: true  # Save one JSON per school
+  update_excel: true  # Update original Excel with new data
+  include_metadata: true  # Include scrape timestamp, confidence scores
+
+# Scraping Behavior
+scraping:
+  max_retries: 3
+  retry_delay: 5
+  timeout_per_school: 300  # 5 minutes max per school
+  page_load_delay: 2  # Seconds to wait between page loads
+  verbose: true
+
+# Data Fields to Extract
+# Based on the Excel columns - these tell the AI what to look for
+fields_to_extract:
+  # Financial Information
+  - name: "in_state_tuition"
+    column: "In-State"
+    keywords:
+      - "in-state tuition"
+      - "resident tuition"
+      - "michigan resident cost"
+      - "in state"
+      - "resident rate"
+    data_type: "currency"
+    validation:
+      min: 0
+      max: 100000
+
+  - name: "out_state_tuition"
+    column: "Out-State"
+    keywords:
+      - "out-of-state tuition"
+      - "non-resident tuition"
+      - "out of state cost"
+      - "nonresident"
+      - "non-resident rate"
+    data_type: "currency"
+    validation:
+      min: 0
+      max: 100000
+
+  - name: "private_tuition"
+    column: "Private/Other"
+    keywords:
+      - "tuition"
+      - "annual cost"
+      - "yearly cost"
+      - "tuition and fees"
+      - "cost of attendance"
+    data_type: "currency"
+    validation:
+      min: 0
+      max: 100000
+
+  # Enrollment
+  - name: "enrollment_size"
+    column: "Approx. Size"
+    keywords:
+      - "enrollment"
+      - "number of students"
+      - "student body"
+      - "total students"
+      - "undergraduate enrollment"
+      - "student population"
+    data_type: "number"
+    validation:
+      min: 0
+      max: 100000
+
+  # Admissions Statistics
+  - name: "admission_rate"
+    column: "Admission Rate"
+    keywords:
+      - "admission rate"
+      - "acceptance rate"
+      - "percent admitted"
+      - "admissions rate"
+      - "acceptance percentage"
+    data_type: "percentage"
+    validation:
+      min: 0
+      max: 100
+
+  - name: "yield_rate"
+    column: "Yield Rate"
+    keywords:
+      - "yield rate"
+      - "enrollment rate"
+      - "matriculation rate"
+      - "yield"
+      - "matriculation percentage"
+    data_type: "percentage"
+    validation:
+      min: 0
+      max: 100
+
+  # Test Scores - SAT
+  - name: "sat_range"
+    column: "SAT Range (25th-75th percentile)"
+    keywords:
+      - "SAT range"
+      - "SAT 25th-75th"
+      - "SAT middle 50%"
+      - "SAT scores"
+      - "SAT percentile"
+    data_type: "range"
+    validation:
+      min: 400
+      max: 1600
+
+  - name: "sat_median"
+    column: "Median/Average SAT"
+    keywords:
+      - "median SAT"
+      - "average SAT"
+      - "SAT median"
+      - "middle SAT"
+      - "mean SAT"
+    data_type: "number"
+    validation:
+      min: 400
+      max: 1600
+
+  # Test Scores - ACT
+  - name: "act_range"
+    column: "ACT Range (25th-75th percentile)"
+    keywords:
+      - "ACT range"
+      - "ACT 25th-75th"
+      - "ACT middle 50%"
+      - "ACT scores"
+      - "ACT percentile"
+    data_type: "range"
+    validation:
+      min: 1
+      max: 36
+
+  - name: "act_median"
+    column: "Median/Average ACT"
+    keywords:
+      - "median ACT"
+      - "average ACT"
+      - "ACT median"
+      - "middle ACT"
+      - "mean ACT"
+    data_type: "number"
+    validation:
+      min: 1
+      max: 36
+
+# Multi-Source Data Collection
+# Priority order for data sources (highest priority first)
+data_sources:
+  enabled: true  # Enable multi-source collection
+
+  priority_order:
+    # 1. IPEDS - Federal database (most reliable)
+    - name: "ipeds"
+      enabled: true
+      confidence_base: 0.98
+      description: "IPEDS College Scorecard API - Federal data"
+      api_key: null  # Optional, get at https://api.data.gov/signup/
+
+    # 2. Common Data Set - Standardized institutional reporting
+    - name: "common_data_set"
+      enabled: true
+      confidence_base: 0.95
+      description: "Look for Common Data Set PDFs/Excel"
+      search_patterns:
+        - "/common-data-set"
+        - "/institutional-research"
+        - "/fast-facts"
+        - "/cds"
+
+    # 3. School Website - Most current, but variable quality
+    - name: "web_scraping"
+      enabled: true
+      confidence_base: 0.85
+      description: "AI agent scraping school website"
+      check_common_data_set_first: true  # Look for CDS before general scraping
+
+    # 4. Wikipedia - Good for validation
+    - name: "wikipedia"
+      enabled: true
+      confidence_base: 0.70
+      description: "Wikipedia infobox data"
+
+  # Merge strategy
+  merge_strategy: "highest_confidence"  # or "weighted_average" for numeric fields
+
+  # Validation: Flag fields where sources disagree significantly
+  validation:
+    enabled: true
+    variance_threshold: 0.15  # Flag if sources differ by >15%
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  save_logs: true
+  log_file: "logs/scraper.log"
+  console_output: true
