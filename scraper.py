@@ -124,6 +124,7 @@ class ArtSchoolScraper:
         self.admission_data_df = None
         self.session = requests.Session()
         self.mcp_client = None  # Will be initialized when needed
+        self._connections_tested = False  # Cache connection test results
 
     def _load_config(self) -> Dict:
         """Load configuration from YAML file"""
@@ -160,9 +161,19 @@ class ArtSchoolScraper:
 
     def load_excel_files(self) -> Tuple[bool, str]:
         """Load both Excel files into DataFrames"""
+        # Skip if already loaded
+        if self.art_schools_df is not None and self.admission_data_df is not None:
+            return True, "Excel files already loaded"
+
         try:
             art_schools_path = self.config['input']['art_schools_file']
             admission_data_path = self.config['input']['admission_data_file']
+
+            # Fast-fail: check if files exist before trying to load
+            if not Path(art_schools_path).exists():
+                return False, f"Excel file not found: {art_schools_path}"
+            if not Path(admission_data_path).exists():
+                return False, f"Excel file not found: {admission_data_path}"
 
             self.art_schools_df = pd.read_excel(art_schools_path)
             self.admission_data_df = pd.read_excel(admission_data_path)
@@ -176,15 +187,19 @@ class ArtSchoolScraper:
         except Exception as e:
             return False, f"Error loading Excel files: {str(e)}"
 
-    def test_connections(self) -> bool:
+    def test_connections(self, force: bool = False) -> bool:
         """Test connections to Ollama and MCP server"""
+        # Return cached result unless forced
+        if self._connections_tested and not force:
+            return True
+
         all_ok = True
 
         # Test Ollama
         console.print("\n[bold]Testing Ollama connection...[/bold]")
         try:
             ollama_url = f"{self.config['ollama']['base_url']}/api/tags"
-            response = self.session.get(ollama_url, timeout=10)
+            response = self.session.get(ollama_url, timeout=5)  # Reduced from 10s
             if response.status_code == 200:
                 models = response.json().get('models', [])
                 console.print(f"  [green]✓[/green] Ollama connected")
@@ -210,8 +225,8 @@ class ArtSchoolScraper:
             mcp_config = self.config.get('mcp', {})
             base_url = mcp_config.get('base_url', 'http://localhost:8931/sse')
 
-            # Try to initialize MCP client
-            test_client = MCPClient(base_url=base_url, timeout=10)
+            # Try to initialize MCP client with reduced timeout
+            test_client = MCPClient(base_url=base_url, timeout=5)  # Reduced from 10s
             result = test_client.initialize()
 
             console.print(f"  [green]✓[/green] MCP Server connected")
@@ -230,6 +245,10 @@ class ArtSchoolScraper:
             console.print(f"  Make sure MCP server is running: docker-compose up -d mcp-server")
             console.print(f"  Check logs: docker-compose logs mcp-server")
             all_ok = False
+
+        # Cache the result
+        if all_ok:
+            self._connections_tested = True
 
         return all_ok
 
@@ -451,8 +470,11 @@ Begin by navigating to the school's homepage and exploring."""
 
             self.logger.info(f"  └─ Tool: {tool_name}({json.dumps(arguments)})")
 
-            # Add delay before tool execution
-            time.sleep(self.config['scraping']['page_load_delay'])
+            # Add delay before tool execution, but only for navigation
+            # Snapshots and other tools don't need delay
+            if tool_name == "browser_navigate":
+                delay = self.config['scraping']['page_load_delay']
+                time.sleep(delay)
 
             # Call actual MCP tool
             result = self.mcp_client.call_tool(tool_name, arguments)
@@ -625,6 +647,7 @@ def main():
     parser.add_argument('--config', type=str, default='config.yaml', help='Path to config file')
     parser.add_argument('--quiet', action='store_true', help='Reduce output verbosity')
     parser.add_argument('--interactive', action='store_true', help='Interactive mode')
+    parser.add_argument('--skip-connection-test', action='store_true', help='Skip connection test (faster startup)')
 
     args = parser.parse_args()
 
@@ -655,11 +678,15 @@ def main():
         sys.exit(1)
 
     elif args.school:
-        # Test connections first
-        console.print("[bold]Checking connections...[/bold]")
-        if not scraper.test_connections():
-            console.print("\n[red]Connection test failed. Please fix issues before scraping.[/red]")
-            sys.exit(1)
+        # Test connections first (but use cache if already tested)
+        if not args.skip_connection_test:
+            console.print("[bold]Checking connections...[/bold]")
+            if not scraper.test_connections(force=False):
+                console.print("\n[red]Connection test failed. Please fix issues before scraping.[/red]")
+                console.print("[yellow]Tip: Use --skip-connection-test to bypass this check[/yellow]")
+                sys.exit(1)
+        else:
+            console.print("[yellow]Skipping connection test...[/yellow]")
 
         # Perform scraping
         result = scraper.scrape_school(args.school)

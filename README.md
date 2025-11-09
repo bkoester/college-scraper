@@ -102,6 +102,9 @@ python scraper.py --list
 # Scrape one school
 python scraper.py --school "Stamps School of Art & Design"
 
+# For faster startup (skip connection test)
+python scraper.py --school "Stamps School of Art & Design" --skip-connection-test
+
 # Results saved to: results/stamps_school_2024-11-09.json
 ```
 
@@ -128,6 +131,9 @@ Shows what data fields will be extracted and the keywords used.
 ```bash
 # Basic usage
 python scraper.py --school "School Name"
+
+# Fast mode (skip connection test for faster startup)
+python scraper.py --school "School Name" --skip-connection-test
 
 # Use different model
 python scraper.py --school "CCS" --model llama3.3:70b
@@ -403,13 +409,15 @@ art-school-scraper/
 ## Tips for Best Results
 
 1. **Start with Test Connection**: Always run `--test-connection` first
-2. **Check Website First**: Visit the school's website manually to see if data is accessible
-3. **Use Verbose Mode**: Keep `verbose: true` to see what's happening
-4. **Review Confidence Scores**: Low confidence (<0.70) may need manual verification
-5. **Check Source URLs**: Verify the agent found the right pages
-6. **Try Different Models**: Larger models are more accurate but slower
-7. **Adjust Timeouts**: Some websites are slow, increase timeout if needed
-8. **Read the Logs**: Check `logs/scraper.log` for detailed debugging info
+2. **Fast Startup**: Use `--skip-connection-test` to bypass connection checks and start faster
+3. **Check Website First**: Visit the school's website manually to see if data is accessible
+4. **Use Verbose Mode**: Keep `verbose: true` to see what's happening
+5. **Review Confidence Scores**: Low confidence (<0.70) may need manual verification
+6. **Check Source URLs**: Verify the agent found the right pages
+7. **Try Different Models**: Larger models are more accurate but slower
+8. **Adjust Timeouts**: Some websites are slow, increase timeout if needed
+9. **Read the Logs**: Check `logs/scraper.log` for detailed debugging info
+10. **Performance**: See `PERFORMANCE.md` for optimization details
 
 ## Limitations
 
